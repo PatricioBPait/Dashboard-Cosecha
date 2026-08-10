@@ -1,6 +1,6 @@
 const EXCLUIR = [
-    "PADRON",
-    "PADRON_LOTE"
+    "padron",
+    "padron_lote"
 ];
 
 document.addEventListener("DOMContentLoaded", cargarDashboard);
