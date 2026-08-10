@@ -1,15 +1,13 @@
-const EXCLUIR = [
-    "padron",
-    "padron_lote"
-];
+const HOJAS_EXCLUIDAS = new Set([
+    "PADRON",
+    "PADRON_LOTE"
+]);
 
-document.addEventListener("DOMContentLoaded", cargarDashboard);
+document.addEventListener("DOMContentLoaded", iniciar);
 
-async function cargarDashboard() {
-
+async function iniciar() {
     try {
-
-        const respuesta = await fetch("./datos.json?v=" + Date.now());
+        const respuesta = await fetch("./datos.json?v=3");
 
         if (!respuesta.ok) {
             throw new Error("No se pudo cargar datos.json");
@@ -17,71 +15,78 @@ async function cargarDashboard() {
 
         const datos = await respuesta.json();
 
-        console.log("Datos cargados:", datos);
+        console.log("DATOS RECIBIDOS:", datos);
 
-        document.getElementById("ultima-actualizacion").textContent =
-            datos.fecha || "Sin información";
+        mostrarFecha(datos.fecha);
 
-        document.getElementById("estado").textContent =
-            "Datos cargados correctamente";
-
-        document.getElementById("estado-footer").textContent =
-            "Sistema automático";
-
-        mostrarDashboard(datos);
+        construirPagina(datos);
 
     } catch (error) {
-
-        console.error("ERROR:", error);
+        console.error(error);
 
         document.getElementById("estado").textContent =
-            "Error al cargar datos";
+            "Error al cargar los datos";
 
         document.getElementById("contenido-hojas").innerHTML = `
             <div class="mensaje-error">
-                <h3>⚠️ Error cargando los datos</h3>
+                <h3>⚠️ Error</h3>
                 <p>${error.message}</p>
             </div>
         `;
-
     }
-
 }
 
 
-function mostrarDashboard(datos) {
+function construirPagina(datos) {
 
-    const menu =
-        document.getElementById("menu-hojas");
-
-    const contenido =
-        document.getElementById("contenido-hojas");
-
-    const indicadores =
-        document.getElementById("indicadores");
-
+    const menu = document.getElementById("menu-hojas");
+    const contenido = document.getElementById("contenido-hojas");
+    const indicadores = document.getElementById("indicadores");
 
     menu.innerHTML = "";
     contenido.innerHTML = "";
     indicadores.innerHTML = "";
 
 
-    const hojas = datos.hojas || {};
-
-    const nombres = Object.keys(hojas)
-        .filter(nombre => {
-
-            const nombreNormalizado =
-                normalizar(nombre);
-
-            return !EXCLUIR.includes(nombreNormalizado);
-
-        });
+    const todasLasHojas = datos.hojas || {};
 
 
-    // =====================================
-    // INDICADORES
-    // =====================================
+    /*
+     * FILTRO DEFINITIVO
+     *
+     * Solamente se muestran las hojas cuyo
+     * nombre NO sea PADRON ni PADRON_LOTE.
+     */
+
+    const hojas = {};
+
+    Object.keys(todasLasHojas).forEach(nombre => {
+
+        const nombreLimpio =
+            String(nombre)
+                .trim()
+                .toUpperCase();
+
+        if (HOJAS_EXCLUIDAS.has(nombreLimpio)) {
+
+            console.log(
+                "HOJA EXCLUIDA:",
+                nombre
+            );
+
+            return;
+        }
+
+        hojas[nombre] =
+            todasLasHojas[nombre];
+
+    });
+
+
+    const nombres = Object.keys(hojas);
+
+
+    // Indicadores
 
     crearIndicador(
         "📄 Hojas",
@@ -89,16 +94,17 @@ function mostrarDashboard(datos) {
     );
 
 
-    let totalRegistros = 0;
+    let registros = 0;
 
     nombres.forEach(nombre => {
 
-        const filas = hojas[nombre];
+        if (Array.isArray(hojas[nombre])) {
 
-        if (Array.isArray(filas)) {
-
-            totalRegistros +=
-                Math.max(filas.length - 1, 0);
+            registros +=
+                Math.max(
+                    hojas[nombre].length - 1,
+                    0
+                );
 
         }
 
@@ -107,7 +113,7 @@ function mostrarDashboard(datos) {
 
     crearIndicador(
         "📋 Registros",
-        totalRegistros
+        registros
     );
 
 
@@ -117,20 +123,19 @@ function mostrarDashboard(datos) {
     );
 
 
-    // =====================================
-    // CREAR HOJAS
-    // =====================================
+    // Crear las hojas
 
     nombres.forEach(nombre => {
 
-        crearBotonMenu(nombre);
+        crearBoton(nombre);
 
-        crearHoja(
-            nombre,
-            hojas[nombre]
-        );
+        crearTabla(nombre, hojas[nombre]);
 
     });
+
+
+    document.getElementById("estado").textContent =
+        `${nombres.length} hojas cargadas correctamente`;
 
 }
 
@@ -140,7 +145,8 @@ function crearIndicador(titulo, valor) {
     const div =
         document.createElement("div");
 
-    div.className = "indicador";
+    div.className =
+        "indicador";
 
     div.innerHTML = `
         <span>${titulo}</span>
@@ -150,11 +156,10 @@ function crearIndicador(titulo, valor) {
     document
         .getElementById("indicadores")
         .appendChild(div);
-
 }
 
 
-function crearBotonMenu(nombre) {
+function crearBoton(nombre) {
 
     const boton =
         document.createElement("button");
@@ -162,19 +167,17 @@ function crearBotonMenu(nombre) {
     boton.textContent =
         nombre;
 
-    boton.onclick = () => {
-
-        const id =
-            crearId(nombre);
+    boton.onclick = function() {
 
         const elemento =
-            document.getElementById(id);
+            document.getElementById(
+                crearID(nombre)
+            );
 
         if (elemento) {
 
             elemento.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
+                behavior: "smooth"
             });
 
         }
@@ -184,32 +187,36 @@ function crearBotonMenu(nombre) {
     document
         .getElementById("menu-hojas")
         .appendChild(boton);
-
 }
 
 
-function crearHoja(nombre, filas) {
+function crearTabla(nombre, filas) {
 
-    const contenedor =
+    const seccion =
         document.createElement("div");
 
-    contenedor.className =
+    seccion.className =
         "hoja";
 
-    contenedor.id =
-        crearId(nombre);
+    seccion.id =
+        crearID(nombre);
 
 
-    contenedor.innerHTML = `
-        <div class="hoja-titulo">
-            <h3>📄 ${nombre}</h3>
-        </div>
-    `;
+    const titulo =
+        document.createElement("div");
+
+    titulo.className =
+        "hoja-titulo";
+
+    titulo.innerHTML =
+        `<h3>📄 ${nombre}</h3>`;
+
+    seccion.appendChild(titulo);
 
 
     if (!Array.isArray(filas) || filas.length === 0) {
 
-        contenedor.innerHTML += `
+        seccion.innerHTML += `
             <div class="mensaje-vacio">
                 Esta hoja no tiene datos.
             </div>
@@ -217,7 +224,7 @@ function crearHoja(nombre, filas) {
 
         document
             .getElementById("contenido-hojas")
-            .appendChild(contenedor);
+            .appendChild(seccion);
 
         return;
     }
@@ -228,13 +235,13 @@ function crearHoja(nombre, filas) {
 
 
     const encabezados =
-        filas[0];
+        filas[0] || [];
 
 
     const thead =
         document.createElement("thead");
 
-    const filaHeader =
+    const trHead =
         document.createElement("tr");
 
 
@@ -246,12 +253,12 @@ function crearHoja(nombre, filas) {
         th.textContent =
             celda ?? "";
 
-        filaHeader.appendChild(th);
+        trHead.appendChild(th);
 
     });
 
 
-    thead.appendChild(filaHeader);
+    thead.appendChild(trHead);
 
     tabla.appendChild(thead);
 
@@ -287,41 +294,41 @@ function crearHoja(nombre, filas) {
     tabla.appendChild(tbody);
 
 
-    const tablaContenedor =
+    const contenedor =
         document.createElement("div");
 
-    tablaContenedor.className =
+    contenedor.className =
         "tabla-contenedor";
 
-    tablaContenedor.appendChild(tabla);
+    contenedor.appendChild(tabla);
 
-
-    contenedor.appendChild(tablaContenedor);
+    seccion.appendChild(contenedor);
 
 
     document
         .getElementById("contenido-hojas")
-        .appendChild(contenedor);
-
+        .appendChild(seccion);
 }
 
 
-function normalizar(texto) {
-
-    return String(texto)
-        .trim()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-
-}
-
-
-function crearId(texto) {
+function crearID(nombre) {
 
     return "hoja-" +
-        normalizar(texto)
+        String(nombre)
+            .trim()
+            .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-|-$/g, "");
+}
 
+
+function mostrarFecha(fecha) {
+
+    const elemento =
+        document.getElementById(
+            "ultima-actualizacion"
+        );
+
+    elemento.textContent =
+        fecha || "Sin información";
 }
