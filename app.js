@@ -391,12 +391,21 @@ function construirPagina(datos) {
 
     Object.keys(todasLasHojas).forEach(nombre => {
 
-        const nombreLimpio =
-            String(nombre)
-                .trim()
-                .toUpperCase();
+       const nombreLimpio = String(nombre)
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[-\s]+/g, "_");
 
-        if (HOJAS_EXCLUIDAS.has(nombreLimpio)) {
+if (
+    HOJAS_EXCLUIDAS.has(nombreLimpio) ||
+    nombreLimpio === "PADRON" ||
+    nombreLimpio === "PADRON_LOTE"
+) {
+    console.log("HOJA EXCLUIDA:", nombre);
+    return;
+}
 
             console.log(
                 "HOJA EXCLUIDA:",
