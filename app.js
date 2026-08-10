@@ -62,7 +62,7 @@ function mostrarDatos(datos) {
         "PADRON",
         "PADRON_LOTE",
         "PADRON POR LOTE",
-        "PADRON POR LOTE"
+        "PADRON_POR_LOTE"
     ];
 
 
