@@ -1,0 +1,23 @@
+{
+  "fecha": "Prueba inicial",
+  "hojas": {
+    "Resumen": [
+      ["Indicador", "Valor"],
+      ["Estado", "Funcionando"],
+      ["Proyecto", "Dashboard Cosecha"]
+    ],
+    "Cosecha": [
+      ["Fecha", "Lote", "Toneladas"],
+      ["10/08/2026", "Lote 001", "150"],
+      ["10/08/2026", "Lote 002", "185"]
+    ],
+    "Produccion": [
+      ["Fecha", "Producción"],
+      ["10/08/2026", "335"]
+    ],
+    "Padrón por lote": [
+      ["Este contenido", "NO debería aparecer"],
+      ["Lote", "001"]
+    ]
+  }
+}
