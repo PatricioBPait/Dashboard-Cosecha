@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard Cosecha</title>
+
+    <meta name="description"
+          content="Dashboard automático de información de cosecha">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- ENCABEZADO -->
+    <header class="header">
+
+        <div class="header-content">
+
+            <div>
+                <h1>🌾 Dashboard Cosecha</h1>
+                <p id="estado">
+                    Cargando información...
+                </p>
+            </div>
+
+            <div class="actualizacion">
+                <span>Última actualización</span>
+                <strong id="ultima-actualizacion">
+                    —
+                </strong>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- MENÚ DE SECCIONES -->
+    <nav class="menu">
+
+        <div id="menu-hojas">
+            <!-- Las hojas de Google Sheets aparecerán aquí -->
+        </div>
+
+    </nav>
+
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="contenedor">
+
+        <!-- RESUMEN -->
+        <section id="resumen" class="seccion resumen">
+
+            <div class="titulo-seccion">
+                <h2>📊 Resumen</h2>
+            </div>
+
+            <div id="indicadores" class="indicadores">
+
+                <div class="indicador cargando">
+                    <span>Datos</span>
+                    <strong>...</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CONTENIDO DE LAS HOJAS -->
+        <section id="datos" class="seccion">
+
+            <div class="titulo-seccion">
+
+                <h2>📋 Información</h2>
+
+                <div class="controles">
+
+                    <input
+                        type="search"
+                        id="buscador"
+                        placeholder="🔎 Buscar..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- Aquí JavaScript insertará todas las hojas -->
+
+            <div id="contenido-hojas">
+
+                <div class="mensaje-cargando">
+
+                    <div class="spinner"></div>
+
+                    <p>
+                        Cargando información de Google Sheets...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- PIE -->
+    <footer class="footer">
+
+        <p>
+            Dashboard Cosecha
+        </p>
+
+        <p id="estado-footer">
+            Sistema automático
+        </p>
+
+    </footer>
+
+
+    <!-- BOTÓN VOLVER ARRIBA -->
+    <button
+        id="volver-arriba"
+        title="Volver arriba"
+        aria-label="Volver arriba">
+
+        ↑
+
+    </button>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="app.js"></script>
+
+</body>
+</html>
