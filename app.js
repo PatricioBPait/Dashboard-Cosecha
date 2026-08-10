@@ -3,7 +3,6 @@ const HOJAS_EXCLUIDAS = new Set([
     "PADRON_LOTE",
     "PADRON POR LOTE"
 ]);
-
 document.addEventListener("DOMContentLoaded", iniciar);
 
 async function iniciar() {
