@@ -1,41 +1,66 @@
+```javascript
 document.addEventListener("DOMContentLoaded", function () {
 
     const URL_PARTE_DIARIO =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSRpElAT0stTkIdi4rF9mhzOlbjrz7pvlP_0R623W6MmbTyyME0yEOic-rA3b99lK9CNnZIz7TuZOW7/pub?gid=811133446&single=true&output=csv";
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vSRpElAT0stTkIdi4rF9mhzOlbjrz7pvlP_0R623W6MmbTyyME0yEOic-rA3b99lK9CNnZIz7TuZOW7/pub?gid=811133446&single=true&output=csv";
 
-fetch(URL_PARTE_DIARIO)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error("No se pudo acceder a Google Sheets");
-    }
-    return response.text();
-  })
-  .then(csv => {
-    console.log("Datos recibidos desde Google Sheets:");
-    console.log(csv);
 
-    // Acá vamos a convertir el CSV
-    // y alimentar el dashboard.
-  })
-  .catch(error => {
-    console.error("Error cargando Google Sheets:", error);
-  });
+    fetch(URL_PARTE_DIARIO)
+
         .then(function (respuesta) {
 
             if (!respuesta.ok) {
-                throw new Error("No se pudo cargar datos.json");
+                throw new Error(
+                    "No se pudo acceder a Google Sheets"
+                );
             }
 
-            return respuesta.json();
+            return respuesta.text();
+
         })
 
-        .then(function (datos) {
+        .then(function (csv) {
 
-            document.getElementById("ultima-actualizacion").textContent =
-                datos.fecha || "Sin información";
+            console.log(
+                "Datos recibidos desde Google Sheets:"
+            );
 
-            document.getElementById("estado").textContent =
+            console.log(csv);
+
+
+            var filas =
+                convertirCSV(csv);
+
+
+            var datos = {
+
+                fecha:
+                    new Date().toLocaleString(
+                        "es-AR"
+                    ),
+
+                hojas: {
+
+                    "PARTE DIARO": filas
+
+                }
+
+            };
+
+
+            document
+                .getElementById(
+                    "ultima-actualizacion"
+                )
+                .textContent =
+                datos.fecha;
+
+
+            document
+                .getElementById("estado")
+                .textContent =
                 "Datos cargados correctamente";
+
 
             mostrarDatos(datos);
 
@@ -45,13 +70,24 @@ fetch(URL_PARTE_DIARIO)
 
             console.error(error);
 
-            document.getElementById("estado").textContent =
+
+            document
+                .getElementById("estado")
+                .textContent =
                 "Error al cargar los datos";
 
-            document.getElementById("contenido-hojas").innerHTML =
+
+            document
+                .getElementById("contenido-hojas")
+                .innerHTML =
                 "<div class='mensaje-error'>" +
+
                 "<h3>⚠️ Error cargando los datos</h3>" +
-                "<p>" + error.message + "</p>" +
+
+                "<p>" +
+                error.message +
+                "</p>" +
+
                 "</div>";
 
         });
@@ -59,54 +95,210 @@ fetch(URL_PARTE_DIARIO)
 });
 
 
+
+/*
+==================================================
+CONVERTIR CSV DE GOOGLE SHEETS
+==================================================
+*/
+
+function convertirCSV(csv) {
+
+    var filas = [];
+
+    var fila = [];
+
+    var celda = "";
+
+    var dentroDeComillas = false;
+
+
+    for (var i = 0; i < csv.length; i++) {
+
+        var caracter = csv[i];
+
+        var siguiente = csv[i + 1];
+
+
+        if (caracter === '"') {
+
+            if (
+                dentroDeComillas &&
+                siguiente === '"'
+            ) {
+
+                celda += '"';
+
+                i++;
+
+            } else {
+
+                dentroDeComillas =
+                    !dentroDeComillas;
+
+            }
+
+        }
+
+        else if (
+            caracter === "," &&
+            !dentroDeComillas
+        ) {
+
+            fila.push(celda);
+
+            celda = "";
+
+        }
+
+        else if (
+            (caracter === "\n" ||
+             caracter === "\r") &&
+            !dentroDeComillas
+        ) {
+
+            if (
+                caracter === "\r" &&
+                siguiente === "\n"
+            ) {
+
+                i++;
+
+            }
+
+
+            fila.push(celda);
+
+            celda = "";
+
+
+            if (fila.length > 1 || fila[0] !== "") {
+
+                filas.push(fila);
+
+            }
+
+
+            fila = [];
+
+        }
+
+        else {
+
+            celda += caracter;
+
+        }
+
+    }
+
+
+    if (celda !== "" || fila.length > 0) {
+
+        fila.push(celda);
+
+        filas.push(fila);
+
+    }
+
+
+    return filas;
+}
+
+
+
+/*
+==================================================
+MOSTRAR DATOS
+==================================================
+*/
+
 function mostrarDatos(datos) {
 
-    var menu = document.getElementById("menu-hojas");
-    var contenido = document.getElementById("contenido-hojas");
-    var indicadores = document.getElementById("indicadores");
+    var menu =
+        document.getElementById(
+            "menu-hojas"
+        );
+
+
+    var contenido =
+        document.getElementById(
+            "contenido-hojas"
+        );
+
+
+    var indicadores =
+        document.getElementById(
+            "indicadores"
+        );
+
 
     menu.innerHTML = "";
+
     contenido.innerHTML = "";
+
     indicadores.innerHTML = "";
 
 
-    var hojas = datos.hojas || {};
+    var hojas =
+        datos.hojas || {};
 
 
     /*
-       HOJAS QUE NO QUEREMOS MOSTRAR
+    ==============================================
+    HOJAS QUE NO QUEREMOS MOSTRAR
+    ==============================================
     */
 
     var excluidas = [
+
         "PADRON",
+
         "PADRON_LOTE",
+
         "PADRON POR LOTE",
-        "PADRON_POR_LOTE"
+
+        "PADRON_POR_LOTE",
+
+        "POR_LOTE"
+
     ];
 
 
-    var nombres = Object.keys(hojas);
+    var nombres =
+        Object.keys(hojas);
 
 
     nombres.forEach(function (nombre) {
+
 
         var nombreNormalizado =
             nombre
                 .trim()
                 .toUpperCase()
                 .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/[-\s]+/g, "_");
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ""
+                )
+                .replace(
+                    /[-\s]+/g,
+                    "_"
+                );
 
 
         if (
-            excluidas.indexOf(nombreNormalizado) !== -1
+            excluidas.indexOf(
+                nombreNormalizado
+            ) !== -1
         ) {
+
             return;
+
         }
 
 
         crearBoton(nombre);
+
 
         crearHoja(
             nombre,
@@ -123,38 +315,69 @@ function mostrarDatos(datos) {
     );
 
 
-    document.getElementById("estado").textContent =
+    document
+        .getElementById("estado")
+        .textContent =
         "Dashboard cargado correctamente";
 
 }
 
 
-function crearIndicadores(nombres, hojas, excluidas) {
+
+/*
+==================================================
+INDICADORES
+==================================================
+*/
+
+function crearIndicadores(
+    nombres,
+    hojas,
+    excluidas
+) {
 
     var cantidadHojas = 0;
+
     var cantidadRegistros = 0;
 
 
     nombres.forEach(function (nombre) {
+
 
         var normalizado =
             nombre
                 .trim()
                 .toUpperCase()
                 .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/[-\s]+/g, "_");
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ""
+                )
+                .replace(
+                    /[-\s]+/g,
+                    "_"
+                );
 
 
-        if (excluidas.indexOf(normalizado) !== -1) {
+        if (
+            excluidas.indexOf(
+                normalizado
+            ) !== -1
+        ) {
+
             return;
+
         }
 
 
         cantidadHojas++;
 
 
-        if (Array.isArray(hojas[nombre])) {
+        if (
+            Array.isArray(
+                hojas[nombre]
+            )
+        ) {
 
             cantidadRegistros +=
                 Math.max(
@@ -187,102 +410,184 @@ function crearIndicadores(nombres, hojas, excluidas) {
 }
 
 
-function crearIndicador(titulo, valor) {
+
+/*
+==================================================
+CREAR INDICADOR
+==================================================
+*/
+
+function crearIndicador(
+    titulo,
+    valor
+) {
 
     var div =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     div.className =
         "indicador";
 
+
     div.innerHTML =
-        "<span>" + titulo + "</span>" +
-        "<strong>" + valor + "</strong>";
+        "<span>" +
+        titulo +
+        "</span>" +
+
+        "<strong>" +
+        valor +
+        "</strong>";
+
 
     document
-        .getElementById("indicadores")
+        .getElementById(
+            "indicadores"
+        )
         .appendChild(div);
 
 }
 
 
+
+/*
+==================================================
+BOTONES DE HOJAS
+==================================================
+*/
+
 function crearBoton(nombre) {
 
     var boton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
+
 
     boton.textContent =
         nombre;
 
 
-    boton.onclick = function () {
-
-        var id =
-            crearID(nombre);
-
-        var elemento =
-            document.getElementById(id);
+    boton.onclick =
+        function () {
 
 
-        if (elemento) {
+            var id =
+                crearID(nombre);
 
-            elemento.scrollIntoView({
-                behavior: "smooth"
-            });
 
-        }
+            var elemento =
+                document.getElementById(
+                    id
+                );
 
-    };
+
+            if (elemento) {
+
+                elemento.scrollIntoView({
+
+                    behavior:
+                        "smooth"
+
+                });
+
+            }
+
+        };
 
 
     document
-        .getElementById("menu-hojas")
-        .appendChild(boton);
+        .getElementById(
+            "menu-hojas"
+        )
+        .appendChild(
+            boton
+        );
 
 }
 
 
-function crearHoja(nombre, filas) {
+
+/*
+==================================================
+CREAR TABLA
+==================================================
+*/
+
+function crearHoja(
+    nombre,
+    filas
+) {
 
     var seccion =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     seccion.className =
         "hoja";
+
 
     seccion.id =
         crearID(nombre);
 
 
     var titulo =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     titulo.className =
         "hoja-titulo";
 
+
     titulo.innerHTML =
-        "<h3>📄 " + nombre + "</h3>";
+        "<h3>📄 " +
+        nombre +
+        "</h3>";
 
-    seccion.appendChild(titulo);
+
+    seccion.appendChild(
+        titulo
+    );
 
 
-    if (!Array.isArray(filas) || filas.length === 0) {
+    if (
+        !Array.isArray(filas) ||
+        filas.length === 0
+    ) {
 
         seccion.innerHTML +=
+
             "<div class='mensaje-vacio'>" +
+
             "Esta hoja no tiene datos." +
+
             "</div>";
 
+
         document
-            .getElementById("contenido-hojas")
-            .appendChild(seccion);
+            .getElementById(
+                "contenido-hojas"
+            )
+            .appendChild(
+                seccion
+            );
+
 
         return;
+
     }
 
 
     var tabla =
-        document.createElement("table");
+        document.createElement(
+            "table"
+        );
 
 
     var encabezados =
@@ -290,89 +595,161 @@ function crearHoja(nombre, filas) {
 
 
     var thead =
-        document.createElement("thead");
+        document.createElement(
+            "thead"
+        );
 
 
     var filaEncabezado =
-        document.createElement("tr");
+        document.createElement(
+            "tr"
+        );
 
 
-    encabezados.forEach(function (celda) {
-
-        var th =
-            document.createElement("th");
-
-        th.textContent =
-            celda || "";
-
-        filaEncabezado.appendChild(th);
-
-    });
+    encabezados.forEach(
+        function (celda) {
 
 
-    thead.appendChild(filaEncabezado);
+            var th =
+                document.createElement(
+                    "th"
+                );
 
-    tabla.appendChild(thead);
+
+            th.textContent =
+                celda || "";
+
+
+            filaEncabezado.appendChild(
+                th
+            );
+
+        }
+    );
+
+
+    thead.appendChild(
+        filaEncabezado
+    );
+
+
+    tabla.appendChild(
+        thead
+    );
 
 
     var tbody =
-        document.createElement("tbody");
+        document.createElement(
+            "tbody"
+        );
 
 
-    filas.slice(1).forEach(function (fila) {
-
-        var tr =
-            document.createElement("tr");
-
-
-        encabezados.forEach(function (_, indice) {
-
-            var td =
-                document.createElement("td");
-
-            td.textContent =
-                fila[indice] || "";
-
-            tr.appendChild(td);
-
-        });
+    filas
+        .slice(1)
+        .forEach(
+            function (fila) {
 
 
-        tbody.appendChild(tr);
+                var tr =
+                    document.createElement(
+                        "tr"
+                    );
 
-    });
+
+                encabezados.forEach(
+                    function (_, indice) {
 
 
-    tabla.appendChild(tbody);
+                        var td =
+                            document.createElement(
+                                "td"
+                            );
+
+
+                        td.textContent =
+                            fila[indice] || "";
+
+
+                        tr.appendChild(
+                            td
+                        );
+
+                    }
+                );
+
+
+                tbody.appendChild(
+                    tr
+                );
+
+            }
+        );
+
+
+    tabla.appendChild(
+        tbody
+    );
 
 
     var contenedor =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     contenedor.className =
         "tabla-contenedor";
 
-    contenedor.appendChild(tabla);
 
-    seccion.appendChild(contenedor);
+    contenedor.appendChild(
+        tabla
+    );
+
+
+    seccion.appendChild(
+        contenedor
+    );
 
 
     document
-        .getElementById("contenido-hojas")
-        .appendChild(seccion);
+        .getElementById(
+            "contenido-hojas"
+        )
+        .appendChild(
+            seccion
+        );
 
 }
 
+
+
+/*
+==================================================
+CREAR ID
+==================================================
+*/
 
 function crearID(nombre) {
 
     return "hoja-" +
+
         nombre
             .trim()
             .toLowerCase()
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "");
+            .replace(
+                /[\u0300-\u036f]/g,
+                ""
+            )
+            .replace(
+                /[^a-z0-9]+/g,
+                "-"
+            )
+            .replace(
+                /^-|-$/g,
+                ""
+            );
 
 }
+```
+
