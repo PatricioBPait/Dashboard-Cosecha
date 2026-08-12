@@ -1,4 +1,4 @@
-```javascript
+javascript
 document.addEventListener("DOMContentLoaded", function () {
 
     const URL_PARTE_DIARIO =
