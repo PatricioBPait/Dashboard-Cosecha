@@ -38,19 +38,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     Promise.all([
-
-        cargarCSV(
-            URL_PARTE_DIARIO
-        ),
-
-        cargarCSV(
-            URL_POR_EMPRESA
-        ),
-
-        cargarCSV(
-            URL_POR_INGENIO
-        )
-
+        cargarCSV(URL_PARTE_DIARIO),
+        cargarCSV(URL_POR_EMPRESA),
+        cargarCSV(URL_POR_INGENIO)
     ])
 
     .then(function (resultados) {
@@ -88,7 +78,6 @@ document.addEventListener("DOMContentLoaded", function () {
     .catch(function (error) {
 
         console.error(error);
-
 
         document.getElementById(
             "estado"
@@ -150,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (
             !filas ||
-            filas.length < 1
+            filas.length === 0
         ) {
 
             return {
@@ -200,8 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let celda = "";
 
-        let dentroDeComillas =
-            false;
+        let dentroDeComillas = false;
 
 
         for (
@@ -217,9 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 csv[i + 1];
 
 
-            if (
-                caracter === '"'
-            ) {
+            if (caracter === '"') {
 
                 if (
                     dentroDeComillas &&
@@ -271,12 +257,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 fila.push(celda);
 
 
-                if (
-                    fila.length > 0
-                ) {
-
+                if (fila.length > 0) {
                     filas.push(fila);
-
                 }
 
 
@@ -342,13 +324,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         construirParteDiario();
 
+
         configurarBuscador();
+
+        configurarVolverArriba();
 
 
         document.getElementById(
             "estado-footer"
         ).textContent =
-            "Datos actualizados automáticamente";
+            "Sistema automático";
 
 
         console.log(
@@ -359,7 +344,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================================
-    // MENÚ
+    // MENÚ SUPERIOR
     // =========================================================
 
     function construirMenu() {
@@ -398,10 +383,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-    // =========================================================
-    // BOTÓN MENÚ
-    // =========================================================
 
     function crearBotonMenu(
         texto,
@@ -487,7 +468,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
 
             throw new Error(
-                "No se encontraron FECHA o VIAJES en PARTE DIARO"
+                "No se encontraron las columnas FECHA o VIAJES en PARTE DIARIO."
             );
 
         }
@@ -530,46 +511,40 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const fechasOrdenadas =
             Array.from(fechas)
-                .sort(function (a, b) {
-
-                    return b.localeCompare(a);
-
-                });
+                .sort();
 
 
         const ultimoDia =
-            fechasOrdenadas[0];
+            fechasOrdenadas[
+                fechasOrdenadas.length - 1
+            ];
 
 
         let viajesUltimoDia = 0;
 
 
-        if (ultimoDia) {
+        registros.forEach(
+            function (fila) {
 
-            registros.forEach(
-                function (fila) {
+                const fecha =
+                    obtenerFechaClave(
+                        fila[indiceFecha]
+                    );
 
-                    const fecha =
-                        obtenerFechaClave(
-                            fila[indiceFecha]
+
+                if (
+                    fecha === ultimoDia
+                ) {
+
+                    viajesUltimoDia +=
+                        convertirNumero(
+                            fila[indiceViajes]
                         );
 
-
-                    if (
-                        fecha === ultimoDia
-                    ) {
-
-                        viajesUltimoDia +=
-                            convertirNumero(
-                                fila[indiceViajes]
-                            );
-
-                    }
-
                 }
-            );
 
-        }
+            }
+        );
 
 
         const kgUltimoDia =
@@ -612,13 +587,9 @@ document.addEventListener("DOMContentLoaded", function () {
             formatearNumero(
                 viajesUltimoDia
             ) +
-            (
+            " — " +
+            formatearFechaClave(
                 ultimoDia
-                    ? " — " +
-                      formatearFechaClave(
-                          ultimoDia
-                      )
-                    : ""
             )
         );
 
@@ -644,7 +615,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================================
-    // INDICADOR
+    // INDICADORES
     // =========================================================
 
     function crearIndicador(
@@ -735,6 +706,19 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
 
+        if (
+            indiceFecha === -1 ||
+            indiceIngenio === -1 ||
+            indiceViajes === -1
+        ) {
+
+            throw new Error(
+                "No se encontraron FECHA, INGENIO o VIAJES en PARTE DIARIO."
+            );
+
+        }
+
+
         const resumen = {};
 
         const fechas =
@@ -784,7 +768,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     ingenio;
 
 
-                if (!resumen[clave]) {
+                if (
+                    !resumen[clave]
+                ) {
 
                     resumen[clave] = 0;
 
@@ -803,11 +789,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const ultimosDias =
             Array.from(fechas)
-                .sort(function (a, b) {
-
-                    return b.localeCompare(a);
-
-                })
+                .sort()
+                .reverse()
                 .slice(0, 2);
 
 
@@ -840,6 +823,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 "No hay datos disponibles." +
                 "</div>";
 
+
             agregarSeccion(
                 seccion
             );
@@ -871,7 +855,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
 
-        const encabezado =
+        const trHead =
             document.createElement(
                 "tr"
             );
@@ -881,7 +865,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "Fecha",
             "Ingenio",
             "Viajes",
-            "Kg totales"
+            "Kg"
         ].forEach(
             function (texto) {
 
@@ -895,7 +879,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     texto;
 
 
-                encabezado.appendChild(
+                trHead.appendChild(
                     th
                 );
 
@@ -904,7 +888,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         thead.appendChild(
-            encabezado
+            trHead
         );
 
 
@@ -922,7 +906,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ultimosDias.forEach(
             function (fecha) {
 
-                const filasDia =
+                const datosDia =
                     INGENIOS.map(
                         function (ingenio) {
 
@@ -937,7 +921,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                             return {
-
                                 ingenio:
                                     ingenio,
 
@@ -947,15 +930,17 @@ document.addEventListener("DOMContentLoaded", function () {
                                 kg:
                                     viajes *
                                     KG_POR_VIAJE
-
                             };
 
                         }
                     );
 
 
-                // MAYOR A MENOR
-                filasDia.sort(
+                // =============================================
+                // ORDEN MAYOR A MENOR
+                // =============================================
+
+                datosDia.sort(
                     function (a, b) {
 
                         return (
@@ -967,23 +952,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
 
-                let totalViajes =
-                    0;
+                let totalViajes = 0;
+
+                let totalKg = 0;
 
 
-                let totalKg =
-                    0;
-
-
-                filasDia.forEach(
-                    function (registro) {
+                datosDia.forEach(
+                    function (dato) {
 
                         totalViajes +=
-                            registro.viajes;
+                            dato.viajes;
 
 
                         totalKg +=
-                            registro.kg;
+                            dato.kg;
 
 
                         const tr =
@@ -1002,14 +984,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         agregarCelda(
                             tr,
-                            registro.ingenio
+                            dato.ingenio
                         );
 
 
                         agregarCelda(
                             tr,
                             formatearNumero(
-                                registro.viajes
+                                dato.viajes
                             )
                         );
 
@@ -1017,7 +999,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         agregarCelda(
                             tr,
                             formatearNumero(
-                                registro.kg
+                                dato.kg
                             ) +
                             " kg"
                         );
@@ -1031,38 +1013,37 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
 
-                const trTotal =
+                const total =
                     document.createElement(
                         "tr"
                     );
 
 
-                trTotal.style.fontWeight =
+                total.style.fontWeight =
                     "bold";
 
 
-                const tdTotal =
+                const td =
                     document.createElement(
                         "td"
                     );
 
 
-                tdTotal.colSpan = 2;
+                td.colSpan = 2;
 
-                tdTotal.textContent =
+
+                td.textContent =
                     "TOTAL " +
                     formatearFechaClave(
                         fecha
                     );
 
 
-                trTotal.appendChild(
-                    tdTotal
-                );
+                total.appendChild(td);
 
 
                 agregarCelda(
-                    trTotal,
+                    total,
                     formatearNumero(
                         totalViajes
                     )
@@ -1070,7 +1051,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 agregarCelda(
-                    trTotal,
+                    total,
                     formatearNumero(
                         totalKg
                     ) +
@@ -1079,7 +1060,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 tbody.appendChild(
-                    trTotal
+                    total
                 );
 
             }
@@ -1124,21 +1105,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================================
-    // POR INGENIO
-    // =========================================================
-
-    function construirPorIngenio() {
-
-        construirTablaDesdeDatos(
-            datosPorIngenio,
-            "por-ingenio",
-            "📈 Por Ingenio"
-        );
-
-    }
-
-
-    // =========================================================
     // PARTE DIARIO
     // =========================================================
 
@@ -1154,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================================
-    // TABLA DESDE GOOGLE SHEETS
+    // CONSTRUIR TABLA
     // =========================================================
 
     function construirTablaDesdeDatos(
@@ -1229,7 +1195,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
 
-        const filaEncabezado =
+        const trHead =
             document.createElement(
                 "tr"
             );
@@ -1248,7 +1214,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     encabezado;
 
 
-                filaEncabezado.appendChild(
+                trHead.appendChild(
                     th
                 );
 
@@ -1257,7 +1223,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         thead.appendChild(
-            filaEncabezado
+            trHead
         );
 
 
@@ -1343,7 +1309,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================================
-    // CELDA
+    // AGREGAR CELDA
     // =========================================================
 
     function agregarCelda(
@@ -1361,9 +1327,7 @@ document.addEventListener("DOMContentLoaded", function () {
             valor;
 
 
-        fila.appendChild(
-            td
-        );
+        fila.appendChild(td);
 
     }
 
@@ -1437,45 +1401,35 @@ document.addEventListener("DOMContentLoaded", function () {
         if (
             texto === "marapa"
         ) {
-
             return "Marapa";
-
         }
 
 
         if (
             texto === "bella vista"
         ) {
-
             return "Bella Vista";
-
         }
 
 
         if (
             texto === "concepcion"
         ) {
-
             return "Concepcion";
-
         }
 
 
         if (
             texto === "arcor"
         ) {
-
             return "Arcor";
-
         }
 
 
         if (
             texto === "corona"
         ) {
-
             return "Corona";
-
         }
 
 
@@ -1499,14 +1453,20 @@ document.addEventListener("DOMContentLoaded", function () {
             valor === undefined ||
             valor === ""
         ) {
-
             return 0;
-
         }
 
 
         let texto =
             String(valor).trim();
+
+
+        texto =
+            texto.replace(
+                /kg/gi,
+                ""
+            )
+            .trim();
 
 
         if (
@@ -1541,9 +1501,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         const numero =
-            parseFloat(
-                texto
-            );
+            parseFloat(texto);
 
 
         return isNaN(numero)
@@ -1554,7 +1512,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================================
-    // OBTENER FECHA
+    // OBTENER FECHA CLAVE
     // =========================================================
 
     function obtenerFechaClave(
@@ -1570,6 +1528,7 @@ document.addEventListener("DOMContentLoaded", function () {
             String(valor).trim();
 
 
+        // Formato DD/MM/YYYY
         const partes =
             texto.split("/");
 
@@ -1593,18 +1552,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             const anio =
-                partes[2]
-                    .substring(0, 4);
+                partes[2].substring(
+                    0,
+                    4
+                );
 
 
             if (
-                anio.length === 4 &&
-                !isNaN(
-                    Number(dia)
-                ) &&
-                !isNaN(
-                    Number(mes)
-                )
+                anio.length === 4
             ) {
 
                 return (
@@ -1620,6 +1575,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
+        // Intento adicional
         const fecha =
             new Date(texto);
 
@@ -1673,6 +1629,15 @@ document.addEventListener("DOMContentLoaded", function () {
             clave.split("-");
 
 
+        if (
+            partes.length !== 3
+        ) {
+
+            return clave;
+
+        }
+
+
         return (
             partes[2] +
             "/" +
@@ -1721,7 +1686,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        buscador.oninput =
+        buscador.addEventListener(
+            "input",
             function () {
 
                 const texto =
@@ -1755,7 +1721,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 );
 
-            };
+            }
+        );
 
     }
 
@@ -1764,37 +1731,33 @@ document.addEventListener("DOMContentLoaded", function () {
     // VOLVER ARRIBA
     // =========================================================
 
-    const botonArriba =
-        document.getElementById(
-            "volver-arriba"
-        );
+    function configurarVolverArriba() {
+
+        const boton =
+            document.getElementById(
+                "volver-arriba"
+            );
 
 
-    if (botonArriba) {
+        if (!boton) {
+            return;
+        }
+
 
         window.addEventListener(
             "scroll",
             function () {
 
-                if (
+                boton.style.display =
                     window.scrollY > 400
-                ) {
-
-                    botonArriba.style.display =
-                        "block";
-
-                } else {
-
-                    botonArriba.style.display =
-                        "none";
-
-                }
+                        ? "block"
+                        : "none";
 
             }
         );
 
 
-        botonArriba.onclick =
+        boton.onclick =
             function () {
 
                 window.scrollTo({
