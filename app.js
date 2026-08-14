@@ -298,12 +298,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // CONSTRUIR DASHBOARD
     // =========================================================
 
-    function construirDashboard() {
+  function construirDashboard() {
 
-        document.getElementById(
-            "estado"
-        ).textContent =
-            "Datos cargados correctamente";
+    document.getElementById(
+        "estado"
+    ).textContent =
+        "Datos cargados correctamente";
+
+
+    // Limpiar mensaje inicial de carga
+    document.getElementById(
+        "contenido-hojas"
+    ).innerHTML = "";
 
 
         document.getElementById(
