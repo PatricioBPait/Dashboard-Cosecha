@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // CONFIGURACIÓN
     // =========================================================
 
-    const KG_POR_VIAJE = 36790;
+    const KG_POR_VIAJE = 40260;
 
     const URL_PARTE_DIARIO =
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vSRpElAT0stTkIdi4rF9mhzOlbjrz7pvlP_0R623W6MmbTyyME0yEOic-rA3b99lK9CNnZIz7TuZOW7/pub?gid=811133446&single=true&output=csv";
